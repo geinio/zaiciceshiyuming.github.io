@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>购物车的案例</title>
+  <style>
+    table {
+      border: 1px solid #e9e9e9;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    th, td {
+      padding: 8px 16px;
+      border: 1px solid #e9e9e9;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f7f7f7;
+      color: #5c6b77;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div id="booksShoppingCart">
+  <div v-if="booksMessage.length">
+    <table>
+      <thead>
+      <tr>
+        <th></th>
+        <th>书籍名称</th>
+        <th>出版日期</th>
+        <th>价格</th>
+        <th>购买数量</th>
+        <th>操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="(item,index) in booksMessage">
+        <!--可以这样写,但是数量那一栏有加减号操作,所以不能这样写,item在这里是一个对象,v-for="value in item"在对象中循环拿到属性值-->
+        <!--<td v-for="value in item">{{value}}</td>-->
+        <td>{{item.id}}</td>
+        <td>{{item.name}}</td>
+        <td>{{item.date}}</td>
+        <td>{{getFinalPrice(item.price)}}</td>
+        <!--<td>{{item.price | showPrice}}</td>-->
+        <td>
+          <button @click="subtractClick(index)" :disabled="item.number <= 0">-</button>
+          {{item.number}}
+          <button @click="addClick(index)">+</button>
+        </td>
+        <td>
+          <button @click="removeClick(index)">移除</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <h1>总价格:{{totalPrice | showPrice}}</h1>
+  </div>
+  <h1 v-else>购物车为空</h1>
+</div>
+<script src="js/vue.js"></script>
+<script>
+  const booksShoppingCart = new Vue({
+    el: "#booksShoppingCart",
+    data: {
+      booksMessage: [
+        {id: 1, name: '《算法导论》', date: "2006-9", price: 85.00, number: 1},
+        {id: 2, name: '《UNIX编程艺术》', date: "2006-2", price: 59.00, number: 1},
+        {id: 3, name: '《编程珠玑》', date: "2008-10", price: 39.00, number: 1},
+        {id: 4, name: '《代码大全》', date: "2006-3", price: 128.00, number: 1}
+      ]
+    },
+    methods: {
+      subtractClick(index) {
+        this.booksMessage[index].number--
+        console.log('subtractClick', index);
+      },
+      addClick(index) {
+        this.booksMessage[index].number++
+        console.log('addClick', index);
+      },
+      removeClick(index) {
+        this.booksMessage.splice(index, 1)
+      },
+      getFinalPrice(price) {
+        return '￥' + price.toFixed(2)
+      }
+    },
+    computed: {
+      totalPrice() {
+        let totalPrice = 0;
+        //1.普通的for循环
+        //for (let i = 0; i < this.booksMessage.length; i++) {
+        //  totalPrice += this.booksMessage[i].price * this.booksMessage[i].number
+        //}
+        //2.for(let i in this.booksMessage)
+        //for (let i in this.booksMessage){
+        //  totalPrice += this.booksMessage[i].price * this.booksMessage[i].number
+        //}
+        //3.for(let i of this.booksMessage)\
+        //for (let i of this.booksMessage) {
+        //  totalPrice += i.price * i.number
+        //}
+        //return totalPrice;
+        //reduce
+        return this.booksMessage.reduce(function (preValue,booksMessage) {
+          return preValue + booksMessage.price * booksMessage.number
+        },0)
+      }
+    },
+    filters: {
+      //过滤器一般是一个函数
+      showPrice(price) {
+        return "￥" + price.toFixed(2);
+      }
+    }
+  });
+  //  编程范式，从某一个角度来说明：命令式编程,声明是编程。这种编程范式的划分是从写代码的方式给计算机的指令的方式划分的。
+  //  命令式的编程是，第一步干什么,第二步干什么,.....
+  //  声明式编程是，拿到数据后，在使用的地方声明，就可以了。声明式编程越来越流行。
+  //  编程范式：面向对象编程(第一公民是对象)/函数式编程（第一公民是函数）
+  //  面向对象编程：JS中是面对对象编程，尽可能的把很多东西抽象成对象，对象有很多的优点，封装性、继承性、多态性。
+  //函数式编程
+  const nums = [10, 200, 300, 40, 50]
+  //filter是高阶函数,高阶函数就是函数本身可能需要的一些参数也是函数.传入的是一个回调函数
+  //filter中的回调函数有一个要求,必须返回一个booelean值
+  //true：当返回true时,函数内部会自动将这次回调的n加入到新的数组中
+  ///false：当返回false时,函数内部会过滤掉这次的n
+  let nums1 = nums.filter(function (n) {
+    return n <= 100;
+  });
+  console.log(nums1);
+  //2.map函数的使用,map函数的内部也是传一个回调函数,map是映射函数
+  let nums2 = nums1.map(function (n) {
+    return n * 2
+  });
+  console.log(nums2);
+  //3.reduce函数的使用,作用:对数组中所有的内容进行汇总
+  //preValue代表的是上一次返回的值
+  //JS中写两个相同的函数,后面的函数会将前一个函数覆盖,但是在Vue中不会覆盖,它采用的是TS（TypeScript）这叫函数的重载
+  let total = nums2.reduce(function (preValue, n) {
+    return preValue + n
+  }, 0)
+  console.log(total);
+
+
+  //最终简写的一个版本,这种编程方式就是函数式编程
+  let total1 = nums.filter(function (n) {
+    return n<=100
+  }).map(function (n) {
+    return n * 2
+  }).reduce(function (preValue,n) {
+    return preValue + n
+  },0)
+  console.log(total1);
+  //最最简便的一个写法,叫箭头函数。
+  let total2 = nums.filter(n => n < 100).map(n => n*2).reduce((pre,n)=> pre +n);
+  console.log(total2);
+
+  //第一次preValue 是0,因为上面初始化为0,n 是一个 20
+  //第二次preValue 是0+20,n 是一个 80
+  //第三次preValue 是0+20+80,n 是一个 100
+  //200
+  ////  1.需求：取出所有小于100的数字
+  //let newNums = [];
+  //for (let n of nums) {
+  //  if (n < 100) {
+  //    newNums.push(n);
+  //  }
+  //}
+  ////  需求2.将所有小于100的数字进行转化：全部*2
+  //let newNums2 = [];
+  //for (let n of newNums) {
+  //  newNums2.push(n * 2);
+  //}
+  //console.log(newNums2);
+  ////  需求3.将所有的newNum2数字相加,得到最终的结果
+  //let total = 0;
+  //for (let n of newNums2) {
+  //  total += n;
+  //}
+  //console.log(total);
+
+
+</script>
+</body>
+</html>
